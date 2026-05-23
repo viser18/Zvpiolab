@@ -1,0 +1,258 @@
+{
+  "info": {
+    "name": "Zvpiolab API",
+    "description": "Полная коллекция для тестирования API с JWT аутентификацией",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Регистрация пользователя",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Иван Петров\",\n  \"email\": \"ivan@example.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/register",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "register"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Вход (логин) – сохраняет токены",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const resp = pm.response.json();",
+              "    pm.collectionVariables.set(\"access_token\", resp.accessToken);",
+              "    pm.collectionVariables.set(\"refresh_token\", resp.refreshToken);",
+              "    pm.collectionVariables.set(\"user_email\", resp.email);",
+              "    console.log(\"Токены сохранены\");",
+              "}",
+              "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"В ответе есть accessToken\", () => pm.expect(resp.accessToken).to.be.a('string'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"ivan@example.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "login"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Обновление access-токена (refresh)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const resp = pm.response.json();",
+              "    pm.collectionVariables.set(\"access_token\", resp.accessToken);",
+              "    pm.collectionVariables.set(\"refresh_token\", resp.refreshToken);",
+              "    console.log(\"Токены обновлены\");",
+              "}",
+              "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/refresh",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "refresh"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Получить требования к паролю",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/auth/password-requirements",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "password-requirements"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. Регистрация администратора (требует modify)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin123!\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/register-admin",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "register-admin"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6. Публичный эндпоинт (greeting)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/greeting",
+          "host": ["{{base_url}}"],
+          "path": ["greeting"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "6.1 Получить всех пользователей",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.2 Получить пользователя по ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["users", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.3 Обновить пользователя (имя, email)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Иван Обновлённый\",\n  \"email\": \"ivan_new@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["users", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.4 Обновить роль пользователя",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/1/role",
+              "host": ["{{base_url}}"],
+              "path": ["users", "1", "role"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.5 Удалить пользователя",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["users", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://localhost:8443",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_email",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
