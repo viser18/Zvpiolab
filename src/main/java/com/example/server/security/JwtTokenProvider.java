@@ -3,9 +3,9 @@ package com.example.server.security;
 import com.example.server.entities.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,8 +16,6 @@ import java.util.Date;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
-@Slf4j
 public class JwtTokenProvider {
 
     private final UserDetailsService userDetailsService;
@@ -33,6 +31,10 @@ public class JwtTokenProvider {
 
     @Value("${jwt.refresh.expiration}")
     private long refreshExpiration;
+
+    public JwtTokenProvider(UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
 
     private Key getAccessSigningKey() {
         return Keys.hmacShaKeyFor(accessSecret.getBytes());
@@ -94,7 +96,7 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException ex) {
-            log.error("JWT validation error: {}", ex.getMessage());
+            System.err.println("JWT validation error: " + ex.getMessage());
             return false;
         }
     }
@@ -134,12 +136,11 @@ public class JwtTokenProvider {
                 .getBody()
                 .get("sessionId", String.class);
     }
-    
 
-    public org.springframework.security.core.Authentication getAuthentication(String token) {
+    public Authentication getAuthentication(String token) {
         String email = getEmailFromAccessToken(token);
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-        return new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                email, null, userDetails.getAuthorities());
+        return new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
     }
 }

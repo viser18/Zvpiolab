@@ -1,238 +1,9 @@
 {
   "info": {
     "name": "Zvpiolab API",
-    "description": "Полная коллекция для тестирования API с JWT аутентификацией",
+    "description": "Полная коллекция для тестирования API с JWT аутентификацией и системой лицензирования",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "item": [
-    {
-      "name": "1. Регистрация пользователя",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"Иван Петров\",\n  \"email\": \"ivan@example.com\",\n  \"password\": \"Password123!\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/auth/register",
-          "host": ["{{base_url}}"],
-          "path": ["auth", "register"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "2. Вход (логин) – сохраняет токены",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "if (pm.response.code === 200) {",
-              "    const resp = pm.response.json();",
-              "    pm.collectionVariables.set(\"access_token\", resp.accessToken);",
-              "    pm.collectionVariables.set(\"refresh_token\", resp.refreshToken);",
-              "    pm.collectionVariables.set(\"user_email\", resp.email);",
-              "    console.log(\"Токены сохранены\");",
-              "}",
-              "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
-              "pm.test(\"В ответе есть accessToken\", () => pm.expect(resp.accessToken).to.be.a('string'));"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"ivan@example.com\",\n  \"password\": \"Password123!\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["auth", "login"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "3. Обновление access-токена (refresh)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "if (pm.response.code === 200) {",
-              "    const resp = pm.response.json();",
-              "    pm.collectionVariables.set(\"access_token\", resp.accessToken);",
-              "    pm.collectionVariables.set(\"refresh_token\", resp.refreshToken);",
-              "    console.log(\"Токены обновлены\");",
-              "}",
-              "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/auth/refresh",
-          "host": ["{{base_url}}"],
-          "path": ["auth", "refresh"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "4. Получить требования к паролю",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{base_url}}/auth/password-requirements",
-          "host": ["{{base_url}}"],
-          "path": ["auth", "password-requirements"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "5. Регистрация администратора (требует modify)",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{access_token}}" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin123!\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/auth/register-admin",
-          "host": ["{{base_url}}"],
-          "path": ["auth", "register-admin"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "6. Публичный эндпоинт (greeting)",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{base_url}}/greeting",
-          "host": ["{{base_url}}"],
-          "path": ["greeting"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Users",
-      "item": [
-        {
-          "name": "6.1 Получить всех пользователей",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users",
-              "host": ["{{base_url}}"],
-              "path": ["users"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "6.2 Получить пользователя по ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users/1",
-              "host": ["{{base_url}}"],
-              "path": ["users", "1"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "6.3 Обновить пользователя (имя, email)",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Иван Обновлённый\",\n  \"email\": \"ivan_new@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/users/1",
-              "host": ["{{base_url}}"],
-              "path": ["users", "1"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "6.4 Обновить роль пользователя",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"role\": \"ADMIN\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/users/1/role",
-              "host": ["{{base_url}}"],
-              "path": ["users", "1", "role"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "6.5 Удалить пользователя",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users/1",
-              "host": ["{{base_url}}"],
-              "path": ["users", "1"]
-            }
-          },
-          "response": []
-        }
-      ]
-    }
-  ],
   "variable": [
     {
       "key": "base_url",
@@ -245,6 +16,11 @@
       "type": "string"
     },
     {
+      "key": "admin_access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "refresh_token",
       "value": "",
       "type": "string"
@@ -253,6 +29,904 @@
       "key": "user_email",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "license_type_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "license_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "license_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "device_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "device_mac",
+      "value": "00:1B:44:11:3A:B7",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth API",
+      "item": [
+        {
+          "name": "1.1 GET - Требования к паролю",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/password-requirements",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "password-requirements"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 POST - Регистрация пользователя",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"user_id\", jsonData.id);",
+                  "    pm.collectionVariables.set(\"user_email\", jsonData.email);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Иван Петров\",\n    \"email\": \"ivan@example.com\",\n    \"password\": \"Test123!@#\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 POST - Логин пользователя",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"access_token\", jsonData.accessToken);",
+                  "    pm.collectionVariables.set(\"refresh_token\", jsonData.refreshToken);",
+                  "    pm.collectionVariables.set(\"user_email\", jsonData.email);",
+                  "    console.log(\"Токены сохранены\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"ivan@example.com\",\n    \"password\": \"Test123!@#\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.4 POST - Обновление токена (refresh)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"access_token\", jsonData.accessToken);",
+                  "    pm.collectionVariables.set(\"refresh_token\", jsonData.refreshToken);",
+                  "    console.log(\"Токены обновлены\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.5 POST - Регистрация администратора",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\",\n    \"password\": \"Admin123!@#\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register-admin",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register-admin"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Public API",
+      "item": [
+        {
+          "name": "2.1 GET - Greeting (публичный)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/greeting",
+              "host": ["{{base_url}}"],
+              "path": ["greeting"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Users API (требует ADMIN)",
+      "item": [
+        {
+          "name": "3.1 GET - Все пользователи",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.2 GET - Пользователь по ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.3 PUT - Обновить пользователя",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Иван Обновлённый\",\n    \"email\": \"ivan_updated@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.4 PUT - Обновить роль пользователя",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"role\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}/role",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}", "role"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.5 DELETE - Удалить пользователя",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Products API",
+      "item": [
+        {
+          "name": "4.1 GET - Все продукты",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": ["{{base_url}}"],
+              "path": ["products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.2 POST - Создать продукт (ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"product_id\", jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Antivirus Pro\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": ["{{base_url}}"],
+              "path": ["products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.3 PUT - Блокировать/разблокировать продукт",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}/block?blocked=true",
+              "host": ["{{base_url}}"],
+              "path": ["products", "{{product_id}}", "block"],
+              "query": [
+                {
+                  "key": "blocked",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. License Types API",
+      "item": [
+        {
+          "name": "5.1 GET - Все типы лицензий",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/license-types",
+              "host": ["{{base_url}}"],
+              "path": ["license-types"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.2 POST - Создать тип лицензии (ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"license_type_id\", jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"YEAR\",\n    \"defaultDurationInDays\": 365,\n    \"description\": \"Годовая лицензия\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/license-types",
+              "host": ["{{base_url}}"],
+              "path": ["license-types"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Devices API",
+      "item": [
+        {
+          "name": "6.1 GET - Все устройства пользователя",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/devices",
+              "host": ["{{base_url}}"],
+              "path": ["devices"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.2 POST - Зарегистрировать устройство",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"device_id\", jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"macAddress\": \"00:1B:44:11:3A:B7\",\n    \"name\": \"Мой рабочий компьютер\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/devices/register",
+              "host": ["{{base_url}}"],
+              "path": ["devices", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.3 GET - Устройство по ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/devices/{{device_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["devices", "{{device_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.4 PUT - Обновить устройство",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Мой новый компьютер\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/devices/{{device_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["devices", "{{device_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.5 GET - Лицензии устройства",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/devices/{{device_id}}/licenses",
+              "host": ["{{base_url}}"],
+              "path": ["devices", "{{device_id}}", "licenses"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.6 POST - Проверить лицензию устройства",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"macAddress\": \"00:1B:44:11:3A:B7\",\n    \"productId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/devices/check-license",
+              "host": ["{{base_url}}"],
+              "path": ["devices", "check-license"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.7 DELETE - Удалить устройство",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/devices/{{device_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["devices", "{{device_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Licenses API",
+      "item": [
+        {
+          "name": "7.1 POST - Создать лицензию (ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"license_code\", jsonData.code);",
+                  "    pm.collectionVariables.set(\"license_id\", jsonData.licenseId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"productId\": 1,\n    \"typeId\": 1,\n    \"ownerId\": 1,\n    \"deviceCount\": 3,\n    \"description\": \"Тестовая лицензия\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/licenses/create",
+              "host": ["{{base_url}}"],
+              "path": ["licenses", "create"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7.2 POST - Активировать лицензию",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"activationKey\": \"{{license_code}}\",\n    \"deviceMac\": \"00:1B:44:11:3A:B7\",\n    \"deviceName\": \"Мой компьютер\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/licenses/activate",
+              "host": ["{{base_url}}"],
+              "path": ["licenses", "activate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7.3 POST - Проверить лицензию",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"deviceMac\": \"00:1B:44:11:3A:B7\",\n    \"productId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/licenses/check",
+              "host": ["{{base_url}}"],
+              "path": ["licenses", "check"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7.4 GET - Лицензия по коду",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/licenses/{{license_code}}",
+              "host": ["{{base_url}}"],
+              "path": ["licenses", "{{license_code}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7.5 GET - Лицензии пользователя",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/licenses/user",
+              "host": ["{{base_url}}"],
+              "path": ["licenses", "user"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7.6 POST - Продлить лицензию",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"activationKey\": \"{{license_code}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/licenses/renew",
+              "host": ["{{base_url}}"],
+              "path": ["licenses", "renew"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7.7 PUT - Блокировать/разблокировать лицензию (ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/licenses/{{license_id}}/block?blocked=true",
+              "host": ["{{base_url}}"],
+              "path": ["licenses", "{{license_id}}", "block"],
+              "query": [
+                {
+                  "key": "blocked",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8. Tickets API",
+      "item": [
+        {
+          "name": "8.1 POST - Сгенерировать Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"activationKey\": \"{{license_code}}\",\n    \"macAddress\": \"00:1B:44:11:3A:B7\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/generate",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "generate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8.2 GET - Сгенерировать Ticket по ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/license/{{license_id}}/device/{{device_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "license", "{{license_id}}", "device", "{{device_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

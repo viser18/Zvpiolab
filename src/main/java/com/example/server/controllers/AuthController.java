@@ -10,7 +10,6 @@ import com.example.server.models.RefreshTokenRequest;
 import com.example.server.repositories.UserRepository;
 import com.example.server.repositories.UserSessionRepository;
 import com.example.server.security.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,7 +25,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
 
@@ -36,8 +34,21 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
-    private static final Pattern PASSWORD_PATTERN = 
-        Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$");
+    private static final Pattern PASSWORD_PATTERN =
+            Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$");
+
+    public AuthController(UserRepository userRepository,
+                          UserSessionRepository userSessionRepository,
+                          PasswordEncoder passwordEncoder,
+                          AuthenticationManager authenticationManager,
+                          JwtTokenProvider jwtTokenProvider) {
+        this.userRepository = userRepository;
+        this.userSessionRepository = userSessionRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegistrationRequest request) {
         try {
@@ -57,10 +68,10 @@ public class AuthController {
 
             if (!isPasswordValid(request.getPassword())) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", 
-                            "Длина пароля должна составлять не менее 8 символов, содержать как минимум одну цифру, " +
-                            "одну строчную букву, одну заглавную букву, один специальный символ (@#$%^&+=!), " +
-                            "и не содержать пробелов"));
+                        .body(Map.of("error",
+                                "Длина пароля должна составлять не менее 8 символов, содержать как минимум одну цифру, " +
+                                        "одну строчную букву, одну заглавную букву, один специальный символ (@#$%^&+=!), " +
+                                        "и не содержать пробелов"));
             }
 
             User user = User.builder()
@@ -84,6 +95,7 @@ public class AuthController {
                     .body(Map.of("error", "Ошибка при регистрации: " + e.getMessage()));
         }
     }
+
     @PreAuthorize("hasAuthority('modify')")
     @PostMapping("/register-admin")
     public ResponseEntity<?> registerAdmin(@RequestBody RegistrationRequest request) {
@@ -105,10 +117,10 @@ public class AuthController {
 
             if (!isPasswordValid(request.getPassword())) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", 
-                            "Длина пароля должна составлять не менее 8 символов, содержать как минимум одну цифру, " +
-                            "одну строчную букву, одну заглавную букву, один специальный символ (@#$%^&+=!), " +
-                            "и не содержать пробелов"));
+                        .body(Map.of("error",
+                                "Длина пароля должна составлять не менее 8 символов, содержать как минимум одну цифру, " +
+                                        "одну строчную букву, одну заглавную букву, один специальный символ (@#$%^&+=!), " +
+                                        "и не содержать пробелов"));
             }
 
             User user = User.builder()
@@ -136,12 +148,13 @@ public class AuthController {
     @GetMapping("/password-requirements")
     public ResponseEntity<Map<String, String>> getPasswordRequirements() {
         return ResponseEntity.ok(Map.of(
-            "requirements", 
-            "Длина пароля должна составлять не менее 8 символов, содержать как минимум одну цифру, " +
+                "requirements",
+                "Длина пароля должна составлять не менее 8 символов, содержать как минимум одну цифру, " +
                         "одну строчную букву, одну заглавную букву, один специальный символ (@#$%^&+=!), " +
                         "и не содержать пробелов"
         ));
     }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthenticationRequest request) {
         try {
@@ -155,7 +168,7 @@ public class AuthController {
 
             try {
                 authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(email, password)
+                        new UsernamePasswordAuthenticationToken(email, password)
                 );
             } catch (BadCredentialsException e) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -167,7 +180,7 @@ public class AuthController {
             String tempRefreshToken = jwtTokenProvider.generateRefreshToken(user, "temp");
             UserSession userSession = UserSession.builder()
                     .userId(user.getId())
-                    .refreshToken(tempRefreshToken) 
+                    .refreshToken(tempRefreshToken)
                     .status(SessionStatus.ACTIVE)
                     .expiresAt(LocalDateTime.now().plusDays(30))
                     .build();
@@ -188,6 +201,7 @@ public class AuthController {
                     .body(Map.of("error", "Неверные учетные данные"));
         }
     }
+
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
         try {
@@ -208,12 +222,12 @@ public class AuthController {
             UserSession oldSession = sessionOpt.get();
             if (!oldSession.getRefreshToken().equals(request.getRefreshToken())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Недействительный refresh token"));
-                }
+                        .body(Map.of("error", "Недействительный refresh token"));
+            }
             if (!oldSession.getUserId().equals(userId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Доступ запрещен"));
-                }            
+                        .body(Map.of("error", "Доступ запрещен"));
+            }
             Optional<User> userOpt = userRepository.findById(userId);
             if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
