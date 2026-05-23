@@ -1,7 +1,9 @@
 package com.example.server.security;
 
 import com.example.server.entities.User;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,6 +15,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -45,18 +49,19 @@ public class JwtTokenProvider {
     }
 
     public String generateAccessToken(User user) {
-        Claims claims = Jwts.claims().setSubject(user.getEmail());
+        Date now = new Date();
+        Date expiration = new Date(now.getTime() + accessExpiration);
+
+        Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
         claims.put("authorities", user.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet()));
         claims.put("tokenType", "ACCESS");
 
-        Date now = new Date();
-        Date expiration = new Date(now.getTime() + accessExpiration);
-
         return Jwts.builder()
-                .setClaims(claims)
+                .setSubject(user.getEmail())
+                .addClaims(claims)
                 .setIssuedAt(now)
                 .setExpiration(expiration)
                 .signWith(getAccessSigningKey(), SignatureAlgorithm.HS256)
@@ -64,16 +69,17 @@ public class JwtTokenProvider {
     }
 
     public String generateRefreshToken(User user, String sessionId) {
-        Claims claims = Jwts.claims().setSubject(user.getEmail());
+        Date now = new Date();
+        Date expiration = new Date(now.getTime() + refreshExpiration);
+
+        Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
         claims.put("sessionId", sessionId);
         claims.put("tokenType", "REFRESH");
 
-        Date now = new Date();
-        Date expiration = new Date(now.getTime() + refreshExpiration);
-
         return Jwts.builder()
-                .setClaims(claims)
+                .setSubject(user.getEmail())
+                .addClaims(claims)
                 .setIssuedAt(now)
                 .setExpiration(expiration)
                 .signWith(getRefreshSigningKey(), SignatureAlgorithm.HS256)
@@ -95,7 +101,7 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(token);
             return true;
-        } catch (JwtException | IllegalArgumentException ex) {
+        } catch (Exception ex) {
             System.err.println("JWT validation error: " + ex.getMessage());
             return false;
         }

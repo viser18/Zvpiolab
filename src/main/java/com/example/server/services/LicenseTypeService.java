@@ -26,11 +26,11 @@ public class LicenseTypeService {
             throw new RuntimeException("License type with name '" + name + "' already exists");
         }
 
-        LicenseType licenseType = LicenseType.builder()
-                .name(name)
-                .defaultDurationInDays(defaultDurationInDays)
-                .description(description)
-                .build();
+        // Создаём без builder
+        LicenseType licenseType = new LicenseType();
+        licenseType.setName(name);
+        licenseType.setDefaultDurationInDays(defaultDurationInDays);
+        licenseType.setDescription(description);
 
         return licenseTypeRepository.save(licenseType);
     }

@@ -160,6 +160,7 @@ public class AuthController {
         try {
             String email = request.getEmail();
             String password = request.getPassword();
+
             Optional<User> userOpt = userRepository.findByEmail(email);
             if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -176,29 +177,38 @@ public class AuthController {
             }
 
             User user = userOpt.get();
+
+            // Генерация access токена
             String accessToken = jwtTokenProvider.generateAccessToken(user);
-            String tempRefreshToken = jwtTokenProvider.generateRefreshToken(user, "temp");
+
+            // Создание сессии для refresh токена
             UserSession userSession = UserSession.builder()
                     .userId(user.getId())
-                    .refreshToken(tempRefreshToken)
                     .status(SessionStatus.ACTIVE)
                     .expiresAt(LocalDateTime.now().plusDays(30))
                     .build();
 
             UserSession savedSession = userSessionRepository.save(userSession);
-            String finalRefreshToken = jwtTokenProvider.generateRefreshToken(user, savedSession.getId().toString());
-            userSession.setRefreshToken(finalRefreshToken);
-            userSessionRepository.save(userSession);
 
-            return ResponseEntity.ok(new AuthenticationResponse(
-                    email,
+            // Генерация refresh токена с ID сессии
+            String refreshToken = jwtTokenProvider.generateRefreshToken(user, savedSession.getId().toString());
+
+            // Обновление сессии с refresh токеном
+            savedSession.setRefreshToken(refreshToken);
+            userSessionRepository.save(savedSession);
+
+            AuthenticationResponse response = new AuthenticationResponse(
+                    user.getEmail(),
                     accessToken,
-                    finalRefreshToken
-            ));
+                    refreshToken
+            );
+
+            return ResponseEntity.ok(response);
 
         } catch (Exception ex) {
+            ex.printStackTrace();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Неверные учетные данные"));
+                    .body(Map.of("error", "Неверные учетные данные: " + ex.getMessage()));
         }
     }
 
@@ -228,16 +238,21 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of("error", "Доступ запрещен"));
             }
+
             Optional<User> userOpt = userRepository.findById(userId);
             if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Пользователь не найден"));
             }
+
             User user = userOpt.get();
+
+            // Помечаем старую сессию как обновлённую
             oldSession.setStatus(SessionStatus.REFRESHED);
             oldSession.setRevokedAt(LocalDateTime.now());
             userSessionRepository.save(oldSession);
 
+            // Создаём новую сессию
             UserSession newSession = UserSession.builder()
                     .userId(user.getId())
                     .status(SessionStatus.ACTIVE)
@@ -245,6 +260,8 @@ public class AuthController {
                     .build();
 
             UserSession savedSession = userSessionRepository.save(newSession);
+
+            // Генерируем новые токены
             String newAccessToken = jwtTokenProvider.generateAccessToken(user);
             String newRefreshToken = jwtTokenProvider.generateRefreshToken(user, savedSession.getId().toString());
 

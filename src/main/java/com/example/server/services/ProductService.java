@@ -25,10 +25,10 @@ public class ProductService {
             throw new RuntimeException("Product with name '" + name + "' already exists");
         }
 
-        Product product = Product.builder()
-                .name(name)
-                .isBlocked(false)
-                .build();
+        // Создаём продукт без builder
+        Product product = new Product();
+        product.setName(name);
+        product.setIsBlocked(false);
 
         return productRepository.save(product);
     }
